@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change this to the branch you want to deploy from
+      - main
 
 jobs:
   build-and-deploy:
@@ -16,10 +16,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Specify the Node.js version
+          node-version: '16'
 
       - name: Install dependencies
         run: npm install
+
+      - name: Initialize and install shadcn/ui components
+        run: |
+          npx shadcn-ui@latest init -y
+          npx shadcn-ui@latest add tabs -y
+          npx shadcn-ui@latest add button -y
+          npx shadcn-ui@latest add card -y
+        env:
+          CI: true
 
       - name: Build project
         run: npm run build
