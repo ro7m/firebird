@@ -21,12 +21,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Initialize and install shadcn/ui components
+      - name: Install shadcn/ui components
         run: |
-          npx shadcn-ui@latest init -y
-          npx shadcn-ui@latest add tabs -y
-          npx shadcn-ui@latest add button -y
-          npx shadcn-ui@latest add card -y
+          npm install @radix-ui/react-slot@^1.0.2 @radix-ui/react-tabs@^1.0.4 class-variance-authority@^0.7.0 clsx@^2.0.0 tailwind-merge@^2.0.0 tailwindcss-animate@^1.0.7
+          mkdir -p src/components/ui
+          cp -r node_modules/@radix-ui/react-tabs src/components/ui/tabs.jsx
+          cp -r node_modules/@radix-ui/react-slot src/components/ui/slot.jsx
+          cp -r node_modules/class-variance-authority src/components/ui/class-variance-authority
+          cp -r node_modules/clsx src/components/ui/clsx
+          cp -r node_modules/tailwind-merge src/components/ui/tailwind-merge
+          cp -r node_modules/tailwindcss-animate src/components/ui/tailwindcss-animate
         env:
           CI: true
 
