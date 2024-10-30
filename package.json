@@ -7,7 +7,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-scripts": "5.0.1",
-    "@shadcn/ui": "^0.1.0",    // Add shadcn/ui here
+    "@shadcn/ui": "^0.1.0",    
     "lucide-react": "^0.21.0"
   },
   "devDependencies": {
