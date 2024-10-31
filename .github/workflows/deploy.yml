@@ -19,20 +19,138 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Install shadcn/ui components
         run: |
+          npm install
           npm install @radix-ui/react-slot@^1.0.2 @radix-ui/react-tabs@^1.0.4 class-variance-authority@^0.7.0 clsx@^2.0.0 tailwind-merge@^2.0.0 tailwindcss-animate@^1.0.7
+
+      - name: Create UI Components
+        run: |
           mkdir -p src/components/ui
-          cp -r node_modules/@radix-ui/react-tabs src/components/ui/tabs.jsx
-          cp -r node_modules/@radix-ui/react-slot src/components/ui/slot.jsx
-          cp -r node_modules/class-variance-authority src/components/ui/class-variance-authority
-          cp -r node_modules/clsx src/components/ui/clsx
-          cp -r node_modules/tailwind-merge src/components/ui/tailwind-merge
-          cp -r node_modules/tailwindcss-animate src/components/ui/tailwindcss-animate
-        env:
-          CI: true
+          
+          # Create tabs.jsx
+          cat > src/components/ui/tabs.jsx << 'EOL'
+          "use client"
+          
+          import * as React from "react"
+          import * as TabsPrimitive from "@radix-ui/react-tabs"
+          import { cn } from "../../lib/utils"
+          
+          const Tabs = TabsPrimitive.Root
+          
+          const TabsList = React.forwardRef(({ className, ...props }, ref) => (
+            <TabsPrimitive.List
+              ref={ref}
+              className={cn(
+                "inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+                className
+              )}
+              {...props}
+            />
+          ))
+          TabsList.displayName = TabsPrimitive.List.displayName
+          
+          const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
+            <TabsPrimitive.Trigger
+              ref={ref}
+              className={cn(
+                "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+                className
+              )}
+              {...props}
+            />
+          ))
+          TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+          
+          const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
+            <TabsPrimitive.Content
+              ref={ref}
+              className={cn(
+                "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                className
+              )}
+              {...props}
+            />
+          ))
+          TabsContent.displayName = TabsPrimitive.Content.displayName
+          
+          export { Tabs, TabsList, TabsTrigger, TabsContent }
+          EOL
+          
+          # Create button.jsx
+          cat > src/components/ui/button.jsx << 'EOL'
+          import * as React from "react"
+          import { Slot } from "@radix-ui/react-slot"
+          import { cva } from "class-variance-authority"
+          import { cn } from "../../lib/utils"
+          
+          const buttonVariants = cva(
+            "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+            {
+              variants: {
+                variant: {
+                  default: "bg-primary text-primary-foreground hover:bg-primary/90",
+                  destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                  outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+                  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                  ghost: "hover:bg-accent hover:text-accent-foreground",
+                  link: "text-primary underline-offset-4 hover:underline",
+                },
+                size: {
+                  default: "h-10 px-4 py-2",
+                  sm: "h-9 rounded-md px-3",
+                  lg: "h-11 rounded-md px-8",
+                  icon: "h-10 w-10",
+                },
+              },
+              defaultVariants: {
+                variant: "default",
+                size: "default",
+              },
+            }
+          )
+          
+          const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+            const Comp = asChild ? Slot : "button"
+            return (
+              <Comp
+                className={cn(buttonVariants({ variant, size, className }))}
+                ref={ref}
+                {...props}
+              />
+            )
+          })
+          Button.displayName = "Button"
+          
+          export { Button, buttonVariants }
+          EOL
+          
+          # Create card.jsx
+          cat > src/components/ui/card.jsx << 'EOL'
+          import * as React from "react"
+          import { cn } from "../../lib/utils"
+          
+          const Card = React.forwardRef(({ className, ...props }, ref) => (
+            <div
+              ref={ref}
+              className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
+              {...props}
+            />
+          ))
+          Card.displayName = "Card"
+          
+          export { Card }
+          EOL
+          
+          # Create utils.js in lib directory
+          mkdir -p src/lib
+          cat > src/lib/utils.js << 'EOL'
+          import { clsx } from "clsx"
+          import { twMerge } from "tailwind-merge"
+          
+          export function cn(...inputs) {
+            return twMerge(clsx(inputs))
+          }
+          EOL
 
       - name: Build project
         run: npm run build
