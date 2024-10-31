@@ -20,6 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          rm -rf node_modules
           npm install
           npm install @radix-ui/react-slot@^1.0.2 @radix-ui/react-tabs@^1.0.4 class-variance-authority@^0.7.0 clsx@^2.0.0 tailwind-merge@^2.0.0 tailwindcss-animate@^1.0.7
 
@@ -153,9 +154,10 @@ jobs:
           EOL
 
       - name: Build project
-        run: npm run build
-        env: 
-          VITE_BASE_PATH : '/${{ env.REPO_NAME }}'
+        run: |
+          npm run build
+          echo "verify build output...."
+          cat dist/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
