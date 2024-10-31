@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
 import { Mic, MicOff, Printer, Save } from 'lucide-react';
 
 const MedicalTranscription = () => {
@@ -15,8 +15,14 @@ const MedicalTranscription = () => {
   });
   const [activeTab, setActiveTab] = useState('advice');
 
+  const handleTranscript = useCallback((transcript) => {
+    setTranscripts(prev => ({
+      ...prev,
+      [activeTab]: (prev[activeTab] + ' ' + transcript).trim()
+    }));
+  }, [activeTab]);
+
   useEffect(() => {
-    // Check if browser supports speech recognition
     if ('webkitSpeechRecognition' in window) {
       const recognition = new window.webkitSpeechRecognition();
       recognition.continuous = true;
@@ -28,10 +34,7 @@ const MedicalTranscription = () => {
           .map(result => result.transcript)
           .join('');
 
-        setTranscripts(prev => ({
-          ...prev,
-          [activeTab]: prev[activeTab] + ' ' + transcript
-        }));
+        handleTranscript(transcript);
       };
 
       recognition.onerror = (event) => {
@@ -40,8 +43,14 @@ const MedicalTranscription = () => {
       };
 
       setRecognition(recognition);
+
+      return () => {
+        if (recognition) {
+          recognition.stop();
+        }
+      };
     }
-  }, []);
+  }, [handleTranscript]);
 
   const toggleRecording = () => {
     if (isRecording) {
