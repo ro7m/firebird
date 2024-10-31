@@ -2,34 +2,36 @@
   "name": "medical-transcription",
   "version": "1.0.0",
   "private": true,
-  "homepage": "",
+  "type": "module",
+  "homepage": "https://ro7m.github.io/firebird",
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-scripts": "5.0.1",
-    "lucide-react": "^0.263.1",
     "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-tabs": "^1.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss": "^3.3.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "gh-pages": "^4.0.0"
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "gh-pages": "^4.0.0",
+    "postcss": "^8.4.31",
+    "vite": "^5.0.0"
   },
-  scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
-}},
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
