@@ -118,15 +118,17 @@ const MedicalTranscription = () => {
   };
 
   const applyTemplate = () => {
-    let content = templates[selectedTemplate].content;
-    Object.entries(templateVariables).forEach(([key, value]) => {
-      content = content.replace(`{{${key}}}`, value);
-    });
-    setTranscripts(prev => ({
-      ...prev,
-      operation: content
-    }));
-  };
+  let content = templates[selectedTemplate].content;
+  Object.entries(templateVariables).forEach(([key, value]) => {
+    const variableValue = value || `[${key} not provided]`; // Provide default if undefined
+    content = content.replace(`{{${key}}}`, variableValue);
+  });
+  setTranscripts(prev => ({
+    ...prev,
+    operation: content
+  }));
+};
+
 
   const saveNewTemplate = () => {
     const variableMatches = newTemplate.content.match(/{{([^}]+)}}/g) || [];
