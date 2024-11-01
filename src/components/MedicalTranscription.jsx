@@ -62,8 +62,7 @@ const MedicalTranscription = () => {
       recognition.interimResults = true;
 
       recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .slice(-1)[0][0].transcript; // Get only the latest result
+      const transcript = Array.from(event.results).slice(-1)[0][0].transcript; // Get only the latest result
       
       setTranscripts(prev => ({
         ...prev,
@@ -76,6 +75,7 @@ const MedicalTranscription = () => {
       };
 
       setRecognition(recognition);
+    }
     }
   }, []);
 
