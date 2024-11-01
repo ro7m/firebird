@@ -54,35 +54,51 @@ const MedicalTranscription = () => {
   });
   const [showNewTemplateDialog, setShowNewTemplateDialog] = useState(false);
 
-  // Speech recognition setup (previous code remains the same)
+
   useEffect(() => {
-  // Check if browser supports speech recognition
-  if ('webkitSpeechRecognition' in window) {
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
-    recognition.onresult = (event) => {
-      // Get the latest transcript from the event
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join('');
+      recognition.onresult = (event) => {
+        // Get only the final results
+        const finalResults = Array.from(event.results)
+          .filter(result => result.isFinal)
+          .map(result => result[0].transcript);
 
-      // Update only the active tab's content with the latest transcript
-      setTranscripts(prev => ({
-        ...prev,
-        [activeTab]: transcript
-      }));
-    };
+        // Get the current result being spoken
+        const currentResult = event.results[event.results.length - 1];
+        const currentTranscript = currentResult[0].transcript;
 
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsRecording(false);
-    };
+        setTranscripts(prev => {
+          const previousTranscript = prev[activeTab] || '';
+          
+          if (currentResult.isFinal) {
+            // For final results, append only the new text
+            const newText = finalResults[finalResults.length - 1];
+            return {
+              ...prev,
+              [activeTab]: previousTranscript + ' ' + newText.trim()
+            };
+          } else {
+            // For interim results, show the current speech without duplication
+            return {
+              ...prev,
+              [activeTab]: previousTranscript + ' ' + currentTranscript.trim()
+            };
+          }
+        });
+      };
 
-    setRecognition(recognition);
-  }
-}, [activeTab]);
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, [activeTab]);
 
 
   const toggleRecording = () => {
