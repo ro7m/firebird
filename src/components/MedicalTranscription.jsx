@@ -56,28 +56,34 @@ const MedicalTranscription = () => {
 
   // Speech recognition setup (previous code remains the same)
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
+  // Check if browser supports speech recognition
+  if ('webkitSpeechRecognition' in window) {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
 
-      recognition.onresult = (event) => {
-      const transcript = Array.from(event.results).slice(-1)[0][0].transcript; // Get only the latest result
-      
+    recognition.onresult = (event) => {
+      // Get the latest transcript from the event
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+
+      // Update only the active tab's content with the latest transcript
       setTranscripts(prev => ({
         ...prev,
-        [activeTab]: prev[activeTab].split(" ").slice(0, -event.results.length).join(" ") + transcript
+        [activeTab]: transcript
       }));
+    };
 
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsRecording(false);
-      };
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+    };
 
-      setRecognition(recognition);
-    }
-    }
-  }, []);
+    setRecognition(recognition);
+  }
+}, [activeTab]);
+
 
   const toggleRecording = () => {
     if (isRecording) {
