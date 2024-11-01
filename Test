@@ -1,58 +1,45 @@
 import { useState, useEffect } from 'react';
 
-const useSpeechRecognition = (activeTab) => {
+const useTextWithSpeech = (initialSections = {}) => {
+  const [transcripts, setTranscripts] = useState(initialSections);
   const [recognition, setRecognition] = useState(null);
-  const [transcripts, setTranscripts] = useState({});
   const [isRecording, setIsRecording] = useState(false);
+  const [activeSection, setActiveSection] = useState(null);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
       const recognition = new window.webkitSpeechRecognition();
-      
       recognition.continuous = true;
       recognition.interimResults = true;
-      
-      recognition.onresult = (event) => {
-        // Debug each result
-        for (let i = 0; i < event.results.length; i++) {
-          const result = event.results[i];
-          console.log(`Result ${i}:`, {
-            transcript: result[0].transcript,
-            confidence: result[0].confidence,
-            isFinal: result.isFinal
-          });
-        }
 
-        // Get the latest result
-        const lastResult = event.results[event.results.length - 1];
-        const transcript = lastResult[0].transcript;
-        
-        // Update based on whether it's final or not
-        if (lastResult.isFinal) {
-          console.log('FINAL RESULT:', transcript);
+      recognition.onresult = (event) => {
+        if (!activeSection) return;
+
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0].transcript;
+
+        if (result.isFinal) {
           setTranscripts(prev => {
-            const currentText = prev[activeTab] || '';
+            const currentText = prev[activeSection] || '';
+            // Find the cursor position or use the end of the text
+            const cursorPosition = currentText.length;
+            
+            // Insert the new text at the cursor position
+            const newText = 
+              currentText.slice(0, cursorPosition) + 
+              ' ' + 
+              transcript.trim() + 
+              currentText.slice(cursorPosition);
+
             return {
               ...prev,
-              [activeTab]: currentText + ' ' + transcript.trim()
+              [activeSection]: newText.trim()
             };
           });
-        } else {
-          console.log('INTERIM RESULT:', transcript);
-          // For interim results, show the current recognition
-          setTranscripts(prev => ({
-            ...prev,
-            [activeTab]: (prev[activeTab] || '').trimEnd() + ' ' + transcript.trim()
-          }));
         }
-      };
-
-      recognition.onstart = () => {
-        console.log('Speech recognition started');
       };
 
       recognition.onend = () => {
-        console.log('Speech recognition ended');
         if (isRecording) {
           recognition.start();
         }
@@ -65,15 +52,18 @@ const useSpeechRecognition = (activeTab) => {
 
       setRecognition(recognition);
     }
-  }, [activeTab, isRecording]);
+  }, [activeSection, isRecording]);
 
-  const startRecording = () => {
+  const handleTextChange = (section, value) => {
+    setTranscripts(prev => ({
+      ...prev,
+      [section]: value
+    }));
+  };
+
+  const startRecording = (section) => {
     if (recognition) {
-      // Clear the transcript when starting new recording
-      setTranscripts(prev => ({
-        ...prev,
-        [activeTab]: ''
-      }));
+      setActiveSection(section);
       recognition.start();
       setIsRecording(true);
     }
@@ -83,15 +73,47 @@ const useSpeechRecognition = (activeTab) => {
     if (recognition) {
       recognition.stop();
       setIsRecording(false);
+      setActiveSection(null);
     }
   };
 
   return {
-    isRecording,
     transcripts,
+    isRecording,
+    handleTextChange,
     startRecording,
     stopRecording
   };
 };
 
-export default useSpeechRecognition;
+// Example usage in a component
+const TextInputWithSpeech = ({ section }) => {
+  const {
+    transcripts,
+    isRecording,
+    handleTextChange,
+    startRecording,
+    stopRecording
+  } = useTextWithSpeech();
+
+  const text = transcripts[section] || '';
+
+  return (
+    <div className="relative">
+      <textarea
+        className="w-full h-64 p-4 border rounded-md"
+        value={text}
+        onChange={(e) => handleTextChange(section, e.target.value)}
+        placeholder={`Enter ${section.replace(/([A-Z])/g, ' $1').toLowerCase()} notes here...`}
+      />
+      <button
+        className="absolute top-2 right-2 px-3 py-1 bg-blue-500 text-white rounded"
+        onClick={() => isRecording ? stopRecording() : startRecording(section)}
+      >
+        {isRecording ? 'Stop Recording' : 'Start Recording'}
+      </button>
+    </div>
+  );
+};
+
+export default TextInputWithSpeech;
