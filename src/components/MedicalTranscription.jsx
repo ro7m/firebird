@@ -37,6 +37,7 @@ const initialTemplates = {
 const MedicalTranscription = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [activeSection, setActiveSection] = useState(null);
   const [transcripts, setTranscripts] = useState({
     advice: '',
     operation: '',
