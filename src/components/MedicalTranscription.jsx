@@ -62,16 +62,13 @@ const MedicalTranscription = () => {
       recognition.interimResults = true;
 
       recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-
-        setTranscripts(prev => ({
-          ...prev,
-          [activeTab]: prev[activeTab] + ' ' + transcript
-        }));
-      };
+      const transcript = Array.from(event.results)
+        .slice(-1)[0][0].transcript; // Get only the latest result
+      
+      setTranscripts(prev => ({
+        ...prev,
+        [activeTab]: prev[activeTab].split(" ").slice(0, -event.results.length).join(" ") + transcript
+      }));
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
