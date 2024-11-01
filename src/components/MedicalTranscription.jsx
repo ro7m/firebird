@@ -33,6 +33,10 @@ const initialTemplates = {
     variables: ['port_count', 'complications', 'gallbladder_condition', 'duration']
   }
 };
+const handleTabChange = (tab) => {
+  setActiveTab(tab);
+  setActiveSection(tab); // Set activeSection to match the selected tab
+};
 
 const MedicalTranscription = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -243,7 +247,7 @@ const MedicalTranscription = () => {
       <Card className="p-6">
         <h1 className="text-2xl font-bold mb-6">Medical Transcription</h1>
         
-        <Tabs defaultValue="advice" className="w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue="advice" className="w-full" onValueChange={handleTabChange}></Tabs>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="advice">Advice</TabsTrigger>
             <TabsTrigger value="operation">Operation</TabsTrigger>
