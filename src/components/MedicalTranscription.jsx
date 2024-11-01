@@ -2,119 +2,54 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { Mic, MicOff, Printer, Save, Plus, Template, Edit } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-
-// Mock database for templates
-const initialTemplates = {
-  'appendectomy': {
-    name: 'Appendectomy Template',
-    content: 'Patient underwent {{procedure_type}} appendectomy. Incision was made in {{incision_location}}. The appendix was {{appendix_condition}}. Procedure duration: {{duration}} minutes. Blood loss: {{blood_loss}}ml.',
-    variables: ['procedure_type', 'incision_location', 'appendix_condition', 'duration', 'blood_loss']
-  },
-  'cholecystectomy': {
-    name: 'Cholecystectomy Template',
-    content: 'Laparoscopic cholecystectomy performed using {{port_count}} ports. {{complications}} encountered. Gallbladder was {{gallbladder_condition}}. Operation time: {{duration}} minutes.',
-    variables: ['port_count', 'complications', 'gallbladder_condition', 'duration']
-  }
-};
-const handleTabChange = (tab) => {
-  setActiveTab(tab);
-  setActiveSection(tab); // Set activeSection to match the selected tab
-};
+import { Mic, MicOff, Printer, Save } from 'lucide-react';
 
 const MedicalTranscription = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeSection, setActiveSection] = useState('advice');
   const [transcripts, setTranscripts] = useState({
     advice: '',
     operation: '',
     postOperative: '',
     dischargeSummary: ''
   });
-  const [activeTab, setActiveTab] = useState('advice');
-  const [templates, setTemplates] = useState(initialTemplates);
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [templateVariables, setTemplateVariables] = useState({});
-  const [newTemplate, setNewTemplate] = useState({
-    name: '',
-    content: '',
-    variables: []
-  });
-  const [showNewTemplateDialog, setShowNewTemplateDialog] = useState(false);
-
 
   useEffect(() => {
+    // Initialize recognition once when the component mounts
     if ('webkitSpeechRecognition' in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      const recognitionInstance = new window.webkitSpeechRecognition();
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
 
-      recognition.onresult = (event) => {
+      recognitionInstance.onresult = (event) => {
         if (!activeSection) return;
 
         const result = event.results[event.results.length - 1];
         const transcript = result[0].transcript;
 
         if (result.isFinal) {
-          setTranscripts(prev => {
-            const currentText = prev[activeSection] || '';
-            // Find the cursor position or use the end of the text
-            const cursorPosition = currentText.length;
-            
-            // Insert the new text at the cursor position
-            const newText = 
-              currentText.slice(0, cursorPosition) + 
-              ' ' + 
-              transcript.trim() + 
-              currentText.slice(cursorPosition);
-
-            return {
-              ...prev,
-              [activeSection]: newText.trim()
-            };
-          });
+          setTranscripts(prev => ({
+            ...prev,
+            [activeSection]: `${prev[activeSection]} ${transcript}`.trim()
+          }));
         }
       };
 
-      recognition.onend = () => {
+      recognitionInstance.onend = () => {
         if (isRecording) {
-          recognition.start();
+          recognitionInstance.start();
         }
       };
 
-      recognition.onerror = (event) => {
+      recognitionInstance.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         setIsRecording(false);
       };
 
-      setRecognition(recognition);
+      setRecognition(recognitionInstance);
     }
-  }, [activeSection, isRecording]);
-
-  const handleTextChange = (section, value) => {
-    setTranscripts(prev => ({
-      ...prev,
-      [section]: value
-    }));
-  };
-
+  }, []);
 
   const toggleRecording = () => {
     if (isRecording) {
@@ -125,57 +60,13 @@ const MedicalTranscription = () => {
     setIsRecording(!isRecording);
   };
 
-
-
-  const handleTemplateSelection = (templateKey) => {
-    setSelectedTemplate(templateKey);
-    const template = templates[templateKey];
-    
-    // Initialize template variables with empty values
-    const initialVars = {};
-    template.variables.forEach(variable => {
-      initialVars[variable] = '';
-    });
-    setTemplateVariables(initialVars);
-  };
-
-  const handleVariableChange = (variable, value) => {
-    setTemplateVariables(prev => ({
+  const handleTextChange = (section, value) => {
+    setTranscripts(prev => ({
       ...prev,
-      [variable]: value
+      [section]: value
     }));
   };
 
-  const applyTemplate = () => {
-  let content = templates[selectedTemplate].content;
-  Object.entries(templateVariables).forEach(([key, value]) => {
-    const variableValue = value || `[${key} not provided]`; // Provide default if undefined
-    content = content.replace(`{{${key}}}`, variableValue);
-  });
-  setTranscripts(prev => ({
-    ...prev,
-    operation: content
-  }));
-};
-
-
-  const saveNewTemplate = () => {
-    const variableMatches = newTemplate.content.match(/{{([^}]+)}}/g) || [];
-    const variables = variableMatches.map(match => match.replace(/{{|}}/g, ''));
-    
-    const templateKey = newTemplate.name.toLowerCase().replace(/\s+/g, '_');
-    setTemplates(prev => ({
-      ...prev,
-      [templateKey]: {
-        ...newTemplate,
-        variables
-      }
-    }));
-    setShowNewTemplateDialog(false);
-    setNewTemplate({ name: '', content: '', variables: [] });
-  };
-
-  // Previous save and print functions remain the same
   const saveDocument = () => {
     const content = `
       Medical Transcription Report
@@ -247,7 +138,7 @@ const MedicalTranscription = () => {
       <Card className="p-6">
         <h1 className="text-2xl font-bold mb-6">Medical Transcription</h1>
         
-        <Tabs defaultValue="advice" className="w-full" onValueChange={handleTabChange}>
+        <Tabs defaultValue="advice" className="w-full" onValueChange={(value) => setActiveSection(value)}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="advice">Advice</TabsTrigger>
             <TabsTrigger value="operation">Operation</TabsTrigger>
@@ -262,97 +153,14 @@ const MedicalTranscription = () => {
                   <h2 className="text-xl font-semibold capitalize">
                     {section.replace(/([A-Z])/g, ' $1').trim()}
                   </h2>
-                  <div className="flex gap-2">
-                    {section === 'operation' && (
-                      <>
-                        <Select value={selectedTemplate} onValueChange={handleTemplateSelection}>
-                          <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Select template" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(templates).map(([key, template]) => (
-                              <SelectItem key={key} value={key}>
-                                {template.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        <Dialog open={showNewTemplateDialog} onOpenChange={setShowNewTemplateDialog}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline">
-                              <Plus className="w-4 h-4 mr-2" />
-                              New Template
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Create New Template</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor="name">Template Name</Label>
-                                <Input
-                                  id="name"
-                                  value={newTemplate.name}
-                                  onChange={(e) => setNewTemplate(prev => ({
-                                    ...prev,
-                                    name: e.target.value
-                                  }))}
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="content">
-                                  Template Content (Use variable_name for placeholders)
-                                </Label>
-                                <textarea
-                                  id="content"
-                                  className="min-h-[100px] w-full p-2 border rounded-md"
-                                  value={newTemplate.content}
-                                  onChange={(e) => setNewTemplate(prev => ({
-                                    ...prev,
-                                    content: e.target.value
-                                  }))}
-                                />
-                              </div>
-                            </div>
-                            <Button onClick={saveNewTemplate}>Save Template</Button>
-                          </DialogContent>
-                        </Dialog>
-                      </>
-                    )}
-                    <Button 
-                      variant={isRecording ? "destructive" : "default"}
-                      onClick={toggleRecording}
-                    >
-                      {isRecording ? <MicOff className="mr-2" /> : <Mic className="mr-2" />}
-                      {isRecording ? 'Stop Recording' : 'Start Recording'}
-                    </Button>
-                  </div>
+                  <Button 
+                    variant={isRecording ? "destructive" : "default"}
+                    onClick={toggleRecording}
+                  >
+                    {isRecording ? <MicOff className="mr-2" /> : <Mic className="mr-2" />}
+                    {isRecording ? 'Stop Recording' : 'Start Recording'}
+                  </Button>
                 </div>
-                
-                {section === 'operation' && selectedTemplate && (
-                  <Card className="p-4 mb-4 bg-gray-50">
-                    <h3 className="font-semibold mb-3">Template Variables</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {templates[selectedTemplate].variables.map(variable => (
-                        <div key={variable} className="space-y-2">
-                          <Label htmlFor={variable}>
-                            {variable.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                          </Label>
-                          <Input
-                            id={variable}
-                            value={templateVariables[variable] || ''}
-                            onChange={(e) => handleVariableChange(variable, e.target.value)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <Button className="mt-4" onClick={applyTemplate}>
-                      Apply Template
-                    </Button>
-                  </Card>
-                )}
                 
                 <textarea
                   className="w-full h-64 p-4 border rounded-md"
