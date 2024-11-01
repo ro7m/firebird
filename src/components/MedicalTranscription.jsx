@@ -62,33 +62,36 @@ const MedicalTranscription = () => {
       recognition.interimResults = true;
 
       recognition.onresult = (event) => {
-        // Get only the final results
-        const finalResults = Array.from(event.results)
-          .filter(result => result.isFinal)
-          .map(result => result[0].transcript);
+        if (!activeSection) return;
 
-        // Get the current result being spoken
-        const currentResult = event.results[event.results.length - 1];
-        const currentTranscript = currentResult[0].transcript;
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0].transcript;
 
-        setTranscripts(prev => {
-          const previousTranscript = prev[activeTab] || '';
-          
-          if (currentResult.isFinal) {
-            // For final results, append only the new text
-            const newText = finalResults[finalResults.length - 1];
+        if (result.isFinal) {
+          setTranscripts(prev => {
+            const currentText = prev[activeSection] || '';
+            // Find the cursor position or use the end of the text
+            const cursorPosition = currentText.length;
+            
+            // Insert the new text at the cursor position
+            const newText = 
+              currentText.slice(0, cursorPosition) + 
+              ' ' + 
+              transcript.trim() + 
+              currentText.slice(cursorPosition);
+
             return {
               ...prev,
-              [activeTab]: previousTranscript + ' ' + newText.trim()
+              [activeSection]: newText.trim()
             };
-          } else {
-            // For interim results, show the current speech without duplication
-            return {
-              ...prev,
-              [activeTab]: previousTranscript + ' ' + currentTranscript.trim()
-            };
-          }
-        });
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          recognition.start();
+        }
       };
 
       recognition.onerror = (event) => {
@@ -98,7 +101,14 @@ const MedicalTranscription = () => {
 
       setRecognition(recognition);
     }
-  }, [activeTab]);
+  }, [activeSection, isRecording]);
+
+  const handleTextChange = (section, value) => {
+    setTranscripts(prev => ({
+      ...prev,
+      [section]: value
+    }));
+  };
 
 
   const toggleRecording = () => {
@@ -110,12 +120,7 @@ const MedicalTranscription = () => {
     setIsRecording(!isRecording);
   };
 
-  const handleTextChange = (section, value) => {
-    setTranscripts(prev => ({
-      ...prev,
-      [section]: value
-    }));
-  };
+
 
   const handleTemplateSelection = (templateKey) => {
     setSelectedTemplate(templateKey);
