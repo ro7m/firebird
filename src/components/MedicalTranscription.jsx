@@ -247,7 +247,7 @@ const MedicalTranscription = () => {
       <Card className="p-6">
         <h1 className="text-2xl font-bold mb-6">Medical Transcription</h1>
         
-        <Tabs defaultValue="advice" className="w-full" onValueChange={handleTabChange}></Tabs>
+        <Tabs defaultValue="advice" className="w-full" onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="advice">Advice</TabsTrigger>
             <TabsTrigger value="operation">Operation</TabsTrigger>
