@@ -274,7 +274,7 @@ const MedicalTranscription = () => {
                               </div>
                               <div className="grid gap-2">
                                 <Label htmlFor="content">
-                                  Template Content (Use {{variable_name}} for placeholders)
+                                  Template Content (Use variable_name for placeholders)
                                 </Label>
                                 <textarea
                                   id="content"
