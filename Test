@@ -1,0 +1,75 @@
+import { useState, useEffect } from 'react';
+
+const useSpeechRecognition = (activeTab) => {
+  const [recognition, setRecognition] = useState(null);
+  const [transcripts, setTranscripts] = useState({});
+  const [isRecording, setIsRecording] = useState(false);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = (event) => {
+        // Get only the final results
+        const finalResults = Array.from(event.results)
+          .filter(result => result.isFinal)
+          .map(result => result[0].transcript);
+
+        // Get the current result being spoken
+        const currentResult = event.results[event.results.length - 1];
+        const currentTranscript = currentResult[0].transcript;
+
+        setTranscripts(prev => {
+          const previousTranscript = prev[activeTab] || '';
+          
+          if (currentResult.isFinal) {
+            // For final results, append only the new text
+            const newText = finalResults[finalResults.length - 1];
+            return {
+              ...prev,
+              [activeTab]: previousTranscript + ' ' + newText.trim()
+            };
+          } else {
+            // For interim results, show the current speech without duplication
+            return {
+              ...prev,
+              [activeTab]: previousTranscript + ' ' + currentTranscript.trim()
+            };
+          }
+        });
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+      };
+
+      setRecognition(recognition);
+    }
+  }, [activeTab]);
+
+  const startRecording = () => {
+    if (recognition) {
+      recognition.start();
+      setIsRecording(true);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognition) {
+      recognition.stop();
+      setIsRecording(false);
+    }
+  };
+
+  return {
+    isRecording,
+    transcripts,
+    startRecording,
+    stopRecording
+  };
+};
+
+export default useSpeechRecognition;
