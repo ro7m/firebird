@@ -129,7 +129,6 @@ const MedicalTranscription = () => {
   };
 
   const saveNewTemplate = () => {
-    // Extract variables from content (matching {{variable_name}})
     const variableMatches = newTemplate.content.match(/{{([^}]+)}}/g) || [];
     const variables = variableMatches.map(match => match.replace(/{{|}}/g, ''));
     
